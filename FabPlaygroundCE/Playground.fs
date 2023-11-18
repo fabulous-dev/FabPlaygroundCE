@@ -235,10 +235,11 @@ type Context() =
         _current <- -1
  
 type Widget() =
-    member val DataA = "" with get, set
+    member val DataA = null with get, set
     member val DataB = "" with get, set
     member val DataAChanged = ignore with get, set
     member val DataBChanged = ignore with get, set
+    member val DataCChanged = ignore with get, set
 
 
 
@@ -246,10 +247,7 @@ type Widget() =
 
 type Contextual = delegate of Context -> Widget
 
-type ViewBuilder() =
-    member inline this.Yield([<InlineIfLambda>] contextual: Contextual) =
-        contextual
-        
+type ViewBuilder() =        
     member inline this.Yield(widget: Widget) =
         Contextual(fun ctx -> widget)
         

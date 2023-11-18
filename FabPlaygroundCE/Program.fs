@@ -27,11 +27,16 @@ module Components =
         static member BindingChild(count: BindingRequest<'T>, action: unit -> unit) =
             view {
                 let! boundCount = count
+                let! localState = state 10
+                
+                printfn $"Child evaluation. Count = {boundCount.Current} / LocalState = {localState.Current}"
                 
                 Widget(
                     DataA = boundCount.Current.ToString(),
+                    DataB = localState.Current.ToString(),
                     DataAChanged = (fun _ -> boundCount.Set(boundCount.Current + 1)),
-                    DataBChanged = fun _ -> action()
+                    DataBChanged = (fun _ -> action()),
+                    DataCChanged = fun _ -> localState.Set(localState.Current * 2)
                 )
             }
             
@@ -39,9 +44,18 @@ module Components =
             view {
                 let! count = state 0
                 
-                View.BindingChild(Binding.ofState count, fun () ->
-                    count.Set(count.Current + 1)
+                printfn $"Parent evaluation. Count = {count.Current}"
+                
+                Widget(
+                    // NOTE: Recreating the Component here will lose the previous Context
+                    DataA = Component(
+                        View.BindingChild(Binding.ofState count, fun () ->
+                            count.Set(count.Current * 10)
+                        )
+                    ),
+                    DataAChanged = fun _ -> count.Set(count.Current + 1)
                 )
+                
             }
 
 module Program =
@@ -50,10 +64,20 @@ module Program =
     [<EntryPoint>]
     let main(args) =
         let comp1 = Component(BindingParent())
-        printfn $"Data = {comp1.Widget.DataA}"
-        comp1.Widget.DataAChanged(null)
-        printfn $"Trigger from child: {comp1.Widget.DataA}"
-        comp1.Widget.DataBChanged(null)
-        printfn $"Trigger from parent: {comp1.Widget.DataA}"
+        
+        printfn "Trigger from child"
+        let childWidget = (comp1.Widget.DataA :?> Component).Widget
+        childWidget.DataAChanged()
+        
+        printfn "Trigger from child, local state only"
+        let childWidget = (comp1.Widget.DataA :?> Component).Widget
+        childWidget.DataCChanged()
+        
+        printfn "Trigger from child, but action from parent"
+        let childWidget = (comp1.Widget.DataA :?> Component).Widget
+        childWidget.DataBChanged()
+        
+        printfn "Trigger from parent"
+        comp1.Widget.DataAChanged()
         0
         
