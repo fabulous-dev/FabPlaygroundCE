@@ -184,6 +184,20 @@ But since Context uses positional access to retrieve the values, firstName and l
 since they will both have Position = 0.
 
 
+###############
+
+A nice thing about this approach is that we can share a context between several components.
+This is useful is the context of controls repeated several times that actually represent a same thing
+(eg the avatar picture in the chat message page that gets repeated in front of each message)
+
+let sharedContext = Context()
+
+let avatar1 = Component(sharedContext, Avatar())
+let avatar2 = Component(sharedContext, Avatar())
+
+avatar1.Background <- Blue
+// Automatically triggers avator2.Background to become Blue
+
 *)
 
 
