@@ -221,12 +221,15 @@ type Context() =
     
     member this.Dirtied = dirtied.Publish
     
+    member this.MarkAsDirty() =
+        dirtied.Trigger()
+    
     member this.SetCurrentValue(value: 'T) =
         values[_current] <- value
         
     member this.SetValue<'T>(key: int, value: 'T) =
         values[key] <- value
-        dirtied.Trigger()
+        this.MarkAsDirty()
         
     member this.Reset() =
         _current <- -1
@@ -244,6 +247,9 @@ type Widget() =
 type Contextual = delegate of Context -> Widget
 
 type ViewBuilder() =
+    member inline this.Yield([<InlineIfLambda>] contextual: Contextual) =
+        contextual
+        
     member inline this.Yield(widget: Widget) =
         Contextual(fun ctx -> widget)
         

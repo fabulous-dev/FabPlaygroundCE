@@ -8,6 +8,7 @@
     <ItemGroup>
         <Compile Include="Playground.fs" />
         <Compile Include="State.fs" />
+        <Compile Include="Binding.fs" />
         <Compile Include="Mvu.fs" />
         <Compile Include="Program.fs"/>
     </ItemGroup>

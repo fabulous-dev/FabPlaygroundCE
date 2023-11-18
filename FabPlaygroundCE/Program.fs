@@ -23,23 +23,37 @@ module Components =
                     DataBChanged = fun _ -> state.Dispatch(MVUCounter.Decrement)
                 )
             }
+            
+        static member BindingChild(count: BindingRequest<'T>, action: unit -> unit) =
+            view {
+                let! boundCount = count
+                
+                Widget(
+                    DataA = boundCount.Current.ToString(),
+                    DataAChanged = (fun _ -> boundCount.Set(boundCount.Current + 1)),
+                    DataBChanged = fun _ -> action()
+                )
+            }
+            
+        static member BindingParent() =
+            view {
+                let! count = state 0
+                
+                View.BindingChild(Binding.ofState count, fun () ->
+                    count.Set(count.Current + 1)
+                )
+            }
 
 module Program =
     open type View
     
     [<EntryPoint>]
     let main(args) =
-        let sharedContext = Context()
-        
-        let comp1 = Component(sharedContext, Counter())
-        let comp2 = Component(sharedContext, Counter())
-        let comp3 = Component(Counter())
-        
+        let comp1 = Component(BindingParent())
+        printfn $"Data = {comp1.Widget.DataA}"
         comp1.Widget.DataAChanged(null)
-        let newCount1 = comp1.Widget.DataA
-        comp2.Widget.DataAChanged(null)
-        let newCount2 = comp2.Widget.DataA
-        comp3.Widget.DataAChanged(null)
-        let newCount3 = comp3.Widget.DataA
+        printfn $"Trigger from child: {comp1.Widget.DataA}"
+        comp1.Widget.DataBChanged(null)
+        printfn $"Trigger from parent: {comp1.Widget.DataA}"
         0
         
