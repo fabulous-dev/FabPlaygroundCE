@@ -135,6 +135,55 @@ it will mark the context as dirty, meaning a re-evaluation is needed.
 This context is originated from the Component that hold both its own Context and the Contextual lambda created by the CE.
 The Component listens to its context Dirtied event to know when to re-evaluate the body.
 
+Another important point is, the context uses positional indexes to store and retrieve the states.
+
+Say you have the following body:
+
+let body =
+    view {
+        let! firstName = state "George"
+        let! lastName = state "Roger"
+        (...)
+    }
+    
+behind the scene, when calling Bind for firstName, Context will switch to the index 0.
+Then when calling Bind for lastName, Context will switch to index 1.
+Resulting in
+
+Context.values =
+[0] = "George"
+[1] = "Roger"
+
+On subsequent reevaluations, Context switch back to index 0 to retrieve the values in order
+let firstName = Context.values[0]
+let lastName = Context.values[1]
+
+This means conditional state is to be avoided
+
+DONT:
+let body =
+    view {
+        if someCondition then
+            let! firstName = state "George"
+            Text("First name is {firstName.Value}")
+        else
+            let! lastName = state "Roger"
+            Text("Last name is {lastName.Value}")
+    }
+    
+This will returning a confusing result.
+
+// 1st execution - someCondition = true
+First name is George
+
+// 2nd execution - someCondition = false
+Last name is George
+
+As a user, you expect to have two independent states: one for FirstName, one for LastName.
+But since Context uses positional access to retrieve the values, firstName and lastName make no difference for Context
+since they will both have Position = 0.
+
+
 *)
 
 
